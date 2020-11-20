@@ -34,6 +34,7 @@ add_feature_info(SHARED_LIBS BUILD_SHARED_LIBS
                  "builds shared libraries instead of static.")
 
 option(BUILD_EXAMPLES "Build s2 documentation examples." ON)
+option(BUILD_TESTING "Build s2 unit tests" ON)
 
 feature_summary(WHAT ALL)
 
@@ -202,10 +203,13 @@ add_library(s2
             src/s2/util/math/exactfloat/exactfloat.cc
             src/s2/util/math/mathutil.cc
             src/s2/util/units/length-units.cc)
-add_library(s2testing STATIC
+if(BUILD_TESTING)
+  add_library(s2testing STATIC
             src/s2/s2builderutil_testing.cc
             src/s2/s2shapeutil_testing.cc
             src/s2/s2testing.cc)
+endif()
+        
 target_link_libraries(
     s2
     ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES} ${OPENSSL_LIBRARIES}
@@ -410,10 +414,13 @@ install(FILES src/s2/util/math/mathutil.h
         DESTINATION include/s2/util/math)
 install(FILES src/s2/util/units/length-units.h
               src/s2/util/units/physical-units.h
-        DESTINATION include/s2/util/units)
-install(TARGETS s2 s2testing DESTINATION lib)
+              DESTINATION include/s2/util/units)
+if(BUILD_TESTING)
+  install(TARGETS s2 s2testing DESTINATION lib)
+else()
+  install(TARGETS s2 DESTINATION lib)
+endif()
 
-message("GTEST_ROOT: ${GTEST_ROOT}")
 if (GTEST_ROOT)
   add_subdirectory(${GTEST_ROOT} build_gtest)
   include_directories(${GTEST_ROOT}/include)
@@ -519,7 +526,6 @@ if (GTEST_ROOT)
       src/s2/sequence_lexicon_test.cc
       src/s2/value_lexicon_test.cc)
 
-  option(BUILD_TESTING "Build s2 unit tests" ON)
   if (BUILD_TESTING)
     enable_testing()
     foreach (test_cc ${S2TestFiles})
