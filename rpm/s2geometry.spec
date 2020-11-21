@@ -57,7 +57,6 @@ DESTDIR=%{buildroot} cmake --build . --target install
 %files devel
 %defattr(-, root, root, 0755)
 %{_includedir}/s2
-%{_libdir}/libs2testing.a
 
 %changelog
 * Sun Nov 15 2020 rinigus <rinigus.git@gmail.com> - 0.9.0-1
