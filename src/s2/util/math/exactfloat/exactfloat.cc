@@ -96,15 +96,22 @@ inline static void BN_ext_set_uint64(BIGNUM* bn, uint64 v) {
 // Return the absolute value of a BIGNUM as a 64-bit unsigned integer.
 // Requires that BIGNUM fits into 64 bits.
 inline static uint64 BN_ext_get_uint64(const BIGNUM* bn) {
-  S2_DCHECK_LE(BN_num_bytes(bn), sizeof(uint64));
+  int num_bytes = BN_num_bytes(bn);
+  S2_DCHECK_LE(num_bytes, 8);
 #if BN_BITS2 == 64
   return BN_get_word(bn);
 #else
-  static_assert(BN_BITS2 == 32, "at least 32 bit openssl build needed");
-  if (bn->top == 0) return 0;
-  if (bn->top == 1) return BN_get_word(bn);
-  S2_DCHECK_EQ(bn->top, 2);
-  return (static_cast<uint64>(bn->d[1]) << 32) + bn->d[0];
+  std::unique_ptr<unsigned char[]> buf(new unsigned char[num_bytes]);
+  int res = BN_bn2bin(bn, buf.get());
+  S2_DCHECK_EQ(num_bytes, res);
+
+  uint64_t ret = 0;
+  for (int i = 0; i < res; ++i) {
+      ret = ret * 256;
+      ret += buf[i];
+  }
+
+  return ret;
 #endif
 }
 
