@@ -1,3 +1,7 @@
+%if !0%{?fedora} || 0%{?fedora} < 33
+%define buildfull 1
+%endif
+
 Summary: S2 Geometry Library
 Name: s2geometry
 Version: 0.9.0+git1
@@ -34,15 +38,29 @@ This package provides headers for development
 %setup -q -n %{name}-%{version}
 
 %build
+
+%if 0%{?buildfull}
 mkdir build || true
 cd build
-%cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_PYTHON=OFF -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_EXAMPLES=OFF ..
+%cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_PYTHON=OFF -DBUILD_TESTING=OFF \
+       -DBUILD_SHARED_LIBS=ON -DBUILD_EXAMPLES=OFF \
+       ..
 %{__make} %{?_smp_mflags}
+%else
+%cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_PYTHON=OFF -DBUILD_TESTING=OFF \
+       -DBUILD_SHARED_LIBS=ON -DBUILD_EXAMPLES=OFF
+%{cmake_build}
+%endif
 
 %install
-cd build
 %{__rm} -rf %{buildroot}
+
+%if 0%{?buildfull}
+cd build
 DESTDIR=%{buildroot} cmake --build . --target install
+%else
+%{cmake_install}
+%endif
 
 %pre
 
